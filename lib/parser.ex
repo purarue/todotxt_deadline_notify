@@ -5,7 +5,7 @@ defmodule TodotxtDeadlineNotify.Todo do
             text: "",
             projects: [],
             contexts: [],
-            additional_tags: []
+            additional_tags: %{}
 end
 
 defmodule TodotxtDeadlineNotify.Parser do
