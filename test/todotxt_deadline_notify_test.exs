@@ -43,4 +43,9 @@ defmodule TodotxtDeadlineNotifyTest do
     assert second.additional_tags == %{"deadline" => "2020-05-14-10-00", "for" => "myself"}
     assert second.priority == "(B)"
   end
+
+  test "parsing id fails" do
+    todo = Parser.from_string("do something at +home")
+    assert todo.id == nil
+  end
 end

@@ -8,3 +8,9 @@ A companion for [full_todotxt](https://github.com/seanbreckenridge/full_todotxt)
   - Priority is (A), 2 hour before deadline
   - Priority is (B), 1 hour before deadline
   - Priority is (C) or None, 0.5 hours before
+
+Currently this notifies me by sending me a message through a discord web hook, the configuration is setup in `config`. This isn't necessarily a server, lots of those [already exist](https://github.com/todotxt/todo.txt-cli/wiki/Other-Todo.txt-Projects). This doesn't offer a mechanism to get your current `todo.txt` up to the server, you can use one of the existing servers or just have your own solution to `scp` it up to a server periodically/after you edit it.
+
+TODO: add my solution to this
+
+The discord web hook and location of todo.txt on the server are hard coded in `config`.
