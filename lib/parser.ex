@@ -16,13 +16,15 @@ defmodule TodotxtDeadlineNotify.Parser do
 
   def from_string(todotxt_string) do
     [todo_id_str | _todo_parts] = String.split(todotxt_string)
-    todo_id = case Integer.parse(todo_id_str) do
-      {todo_id_int, _} ->
-        todo_id_int
-      _ ->
-        nil
-    end
 
+    todo_id =
+      case Integer.parse(todo_id_str) do
+        {todo_id_int, _} ->
+          todo_id_int
+
+        _ ->
+          nil
+      end
 
     # If Priority exists, parse it
     priority = (Regex.run(~r"\([A-Z]\)", todotxt_string) || []) |> List.first()
