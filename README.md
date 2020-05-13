@@ -1,21 +1,10 @@
 # TodotxtDeadlineNotify
 
-**TODO: Add description**
+A companion for [full_todotxt](https://github.com/seanbreckenridge/full_todotxt), runs on my server and sends me reminders when `deadlines` for `todos` when they get close. In particular:
 
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `todotxt_deadline_notify` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:todotxt_deadline_notify, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/todotxt_deadline_notify](https://hexdocs.pm/todotxt_deadline_notify).
-
+- In the morning: remind me of any todos which have `deadline`s today.
+- In the evening: remind me of any todos (excluding priority `C`) for tomorrow.
+- For each todo, remind me some time before the todos `deadline` If:
+  - Priority is (A), 2 hour before deadline
+  - Priority is (B), 1 hour before deadline
+  - Priority is (C) or None, 0.5 hours before
