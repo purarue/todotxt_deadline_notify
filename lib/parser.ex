@@ -1,8 +1,8 @@
 defmodule TodotxtDeadlineNotify.Todo do
-  defstruct id: nil,
-            priority: nil,
+  defstruct priority: nil,
             creation_date: nil,
             text: "",
+            reminders: [],
             projects: [],
             contexts: [],
             additional_tags: %{}
@@ -15,17 +15,6 @@ defmodule TodotxtDeadlineNotify.Parser do
   alias TodotxtDeadlineNotify.Todo
 
   def from_string(todotxt_string) do
-    [todo_id_str | _todo_parts] = String.split(todotxt_string)
-
-    todo_id =
-      case Integer.parse(todo_id_str) do
-        {todo_id_int, _} ->
-          todo_id_int
-
-        _ ->
-          nil
-      end
-
     # If Priority exists, parse it
     priority = (Regex.run(~r"\([A-Z]\)", todotxt_string) || []) |> List.first()
 
@@ -52,7 +41,6 @@ defmodule TodotxtDeadlineNotify.Parser do
       |> Map.new(fn [k, v] -> {k, v} end)
 
     %Todo{
-      id: todo_id,
       priority: priority,
       creation_date: creation_parsed,
       text: todotxt_string,
@@ -68,5 +56,115 @@ defmodule TodotxtDeadlineNotify.Parser do
     # remove empty lines
     |> Enum.reject(fn line -> String.trim(line) == "" end)
     |> Enum.map(&from_string(&1))
+  end
+end
+
+defmodule TodotxtDeadlineNotify.TodoUtils do
+  @doc """
+  Shifts naive datetime to the same day, but at 'morning_time'
+  """
+  def in_the_morning(datetime, morning_time) do
+    case NaiveDateTime.new(
+           datetime.year,
+           datetime.month,
+           datetime.day,
+           morning_time[:hour],
+           morning_time[:minute],
+           datetime.second
+         ) do
+      {:ok, datetime} ->
+        datetime
+
+      _ ->
+        nil
+    end
+  end
+
+  @doc """
+  Shfits naive datetime to the previous day, at 'night_time'
+  """
+  def for_prev_day(datetime, night_time) do
+    yesterday =
+      datetime
+      # subtract a day
+      |> NaiveDateTime.add(-86400, :second)
+
+    case NaiveDateTime.new(
+           yesterday.year,
+           yesterday.month,
+           yesterday.day,
+           night_time[:hour],
+           night_time[:minute],
+           yesterday.second
+         ) do
+      {:ok, datetime} ->
+        datetime
+
+      _ ->
+        nil
+    end
+  end
+
+  def has_deadline?(todo) do
+    Map.has_key?(todo.additional_tags, "deadline")
+  end
+
+  @doc """
+  Parse the timezone from the string format to a datetime
+  """
+  def parse_deadline(todo) do
+    if has_deadline?(todo) do
+      # parses into naive datetime value
+      naive_parsed_time =
+        Timex.parse!(todo.additional_tags["deadline"], "%Y-%m-%d-%H-%M", :strftime)
+
+      %{todo | additional_tags: Map.put(todo.additional_tags, "deadline", naive_parsed_time)}
+    else
+      todo
+    end
+  end
+
+  @doc """
+  Find out when this todo has to be notified for. Assumes the deadline is already parsed
+  Returns a todo with the reminders: key on the struct updated
+
+  the times for when to notify are configured in config/config.exs
+  config/config.exs
+  """
+  def get_notification_times(todo, time_morning, time_night) do
+    if not has_deadline?(todo) do
+      todo
+    else
+      deadline = todo.additional_tags["deadline"]
+
+      reminders =
+        [
+          # current day notification
+          in_the_morning(deadline, time_morning),
+          # previous day noficiation
+          if todo.priority == "(A)" or todo.priority == "(B)" do
+            for_prev_day(deadline, time_night)
+          else
+            nil
+          end,
+          # before the deadline is due notification
+          case todo.priority do
+            "(A)" ->
+              NaiveDateTime.add(deadline, -120 * 60, :second)
+
+            "(B)" ->
+              NaiveDateTime.add(deadline, -60 * 60, :second)
+
+            "(C)" ->
+              NaiveDateTime.add(deadline, -30 * 60, :second)
+
+            _ ->
+              nil
+          end
+        ]
+        |> Enum.reject(&is_nil/1)
+
+      %{todo | reminders: reminders}
+    end
   end
 end
