@@ -165,6 +165,6 @@ defmodule TodotxtDeadlineNotify.Worker do
 
   # calls :check once a minute
   defp schedule_check() do
-    Process.send_after(self(), :check, 5 * 1000)
+    Process.send_after(self(), :check, 60 * 1000)
   end
 end
