@@ -19,6 +19,8 @@ To sync this up to my server I use [entr](http://eradman.com/entrproject/); in t
 find ~/.config/todo/todo.txt | entr scp ...
 ```
 
+See `copy_todotxt_to_server.sh` in this repo.
+
 ... which `scp`s my `todo.txt` up to my server whenever its saved.
 
 The discord web hook and location of todo.txt on the server are hard coded in `config`.
