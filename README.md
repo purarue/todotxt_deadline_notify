@@ -23,4 +23,4 @@ find ~/.config/todo/todo.txt | entr scp ...
 
 The discord web hook and location of todo.txt on the server are hard coded in `config`.
 
-This could be extended pretty easily, by modifying the `notify` function [here](./todotxt_deadline_notify/lib/notify.ex) to send the message to somewhere other than discord.
+This could be extended pretty easily, by modifying the `notify` function [here](./lib/notify.ex) to send the message to somewhere other than discord.
