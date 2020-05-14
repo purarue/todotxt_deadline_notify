@@ -151,7 +151,7 @@ defmodule TodotxtDeadlineNotify.Worker do
             not (stat_info.mtime == Map.get(state, :todo_mod_time))
           else
             # default to true if file hasnt been read, to signify to read the file
-            # if this is being called from init, maintenance fails and the application doesnt start at all.
+            # if this is being called from init and it fails, maintenance fails and the application doesnt start at all.
             true
           end
 

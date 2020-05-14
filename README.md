@@ -13,6 +13,14 @@ When to remind in the morning/evening (and the timezone) is configured in [`conf
 
 Currently this notifies me by sending me a message through a discord web hook, the configuration is setup in `config`. This isn't necessarily a server, lots of those [already exist](https://github.com/todotxt/todo.txt-cli/wiki/Other-Todo.txt-Projects). This doesn't offer a mechanism to get your current `todo.txt` up to the server, you can use one of the existing servers or just have your own solution to `scp` it up to a server periodically/after you edit it.
 
-TODO: add my solution to this
+In the background, I run:
+
+```
+find ~/.config/todo/todo.txt | entr scp ...
+```
+
+... which `scp`s my `todo.txt` up to my server whenever its saved.
 
 The discord web hook and location of todo.txt on the server are hard coded in `config`.
+
+This could be extended pretty easily, by modifying the `notify` function [here](./todotxt_deadline_notify/lib/notify.ex) to send the message to somewhere other than discord.
