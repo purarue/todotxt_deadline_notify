@@ -8,7 +8,7 @@ defmodule TodotxtDeadlineNotify.Application do
   def start(_type, _args) do
     children = [
       # Starts a worker by calling: TodotxtDeadlineNotify.Worker.start_link(arg)
-      {TodotxtDeadlineNotify.Worker, []}
+      TodotxtDeadlineNotify.Worker
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

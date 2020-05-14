@@ -14,7 +14,7 @@ defmodule TodotxtDeadlineNotify.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      applications: [:timex],
+      applications: [:timex, :httpoison],
       extra_applications: [:logger],
       mod: {TodotxtDeadlineNotify.Application, []}
     ]
@@ -24,7 +24,9 @@ defmodule TodotxtDeadlineNotify.MixProject do
   defp deps do
     [
       {:timex, "~> 3.5"},
-      {:tzdata, "~> 1.0.2"}
+      {:tzdata, "~> 1.0.2"},
+      {:httpoison, "~> 1.6"},
+      {:poison, "~> 3.1"}
     ]
   end
 end

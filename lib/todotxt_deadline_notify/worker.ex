@@ -1,6 +1,8 @@
 defmodule TodotxtDeadlineNotify.Worker do
   alias TodotxtDeadlineNotify.Parser
   alias TodotxtDeadlineNotify.TodoUtils
+  alias TodotxtDeadlineNotify.SentCache
+  alias TodotxtDeadlineNotify.Notify
   use GenServer
 
   def start_link(data) do
@@ -8,13 +10,17 @@ defmodule TodotxtDeadlineNotify.Worker do
   end
 
   def init(_data) do
+    {:ok, cache_pid} = TodotxtDeadlineNotify.SentCache.start_link()
+
     # run initial check to make sure file exists/parse file
+
     state =
       maintenance(%{
-        :todo_file => Application.get_env(:todotxt_deadline_notify, :todo_file),
-        :timezone => Application.get_env(:todotxt_deadline_notify, :timezone),
+        todo_file: Application.get_env(:todotxt_deadline_notify, :todo_file),
+        timezone: Application.get_env(:todotxt_deadline_notify, :timezone),
         morning_remind_at: Application.get_env(:todotxt_deadline_notify, :morning_remind_at),
-        night_remind_at: Application.get_env(:todotxt_deadline_notify, :night_remind_at)
+        night_remind_at: Application.get_env(:todotxt_deadline_notify, :night_remind_at),
+        cache_pid: cache_pid
       })
 
     schedule_check()
@@ -28,27 +34,73 @@ defmodule TodotxtDeadlineNotify.Worker do
     # recursive call to check file every 5 minutes
     state = maintenance(state)
     # check if any todos need to be sent
-    state = check_for_new_todos(state)
+    state = send_notifications(state)
     # schedule next loop
     schedule_check()
     {:noreply, state}
   end
 
-  defp check_for_new_todos(state) do
-    %{timezone: timezone} = state
+  defp current_naive_time(timezone) do
+    DateTime.utc_now()
+    |> DateTime.shift_zone!(timezone)
+    |> DateTime.to_naive()
+  end
 
-    # when each todo is parsed, it saves times when notifications for it
-    # should be sent (morning, night, some time before based on priority)
-    # if the current time is past any of those times, it should send a message, and mark
-    # a value in the genserver cache to specify that todo has been sent.
-    # that cache dies whenever the application is restarted, so on application start, messages which
-    # have deadlines in the past will have notifications sent (but not for each time (morning, night), should
-    # be filtered down to each type, and then all marked notifications sent
-    # (assuming the discord POST succeeded))
-    # the duplicate notifications are managable. If a todo really has a deadline
-    # in the past, no need to worry about re-remindig me about it.
-    # If I dont want to be, I can always extend the deadline and re-sync the todo.txt file.
-    # This keeps my todo.txt file up to date and reminds me to look at my todos
+  # when each todo is parsed, it saves times when notifications for it
+  # should be sent (morning, night, some time before based on priority)
+  # if the current time is past any of those times, it should send a message, and mark
+  # a value in the genserver cache to specify that todo has been sent.
+  # that cache dies whenever the application is restarted, so on application start, messages which
+  # have deadlines in the past will have notifications sent (but not for each time (morning, night), should
+  # be filtered down to each type, and then all marked notifications sent
+  # (assuming the discord POST succeeded))
+  # the duplicate notifications are managable. If a todo really has a deadline
+  # in the past, no need to worry about re-remindig me about it.
+  # If I dont want to be, I can always extend the deadline and re-sync the todo.txt file.
+  # This keeps my todo.txt file up to date and reminds me to look at my todos
+  defp send_notifications(state) do
+    %{timezone: timezone, cache_pid: pid} = state
+
+    current_time = current_naive_time(timezone)
+
+    reminders_to_send =
+      state[:todos]
+      # create {todotxt, reminder send time} tuples
+      |> Enum.map(fn todo ->
+        todo.reminders
+        |> Enum.map(fn remind -> {todo.text, remind} end)
+      end)
+      |> List.flatten()
+      # if the reminder send time is in the past
+      |> Enum.filter(fn {_todotxt, attime} ->
+        NaiveDateTime.compare(attime, current_time) == :lt
+      end)
+      # if the notification hasnt already been sent
+      |> Enum.filter(fn {todotxt, attime} ->
+        not SentCache.has_been_sent?(pid, todotxt, attime)
+      end)
+
+    # dont need to send muliple reminders for the same message on one loop
+    responses_sent =
+      reminders_to_send
+      # filter to only send unique reminders
+      |> Enum.map(fn {todotxt, _at} ->
+        todotxt
+      end)
+      |> MapSet.new()
+      # send notifications
+      |> Enum.map(&Notify.notify(&1))
+
+    # but mark them all as sent if all messages are sent successfully
+    if not Enum.member?(responses_sent, :error) do
+      reminders_to_send
+      |> Enum.map(fn {todotxt, attime} ->
+        SentCache.mark_sent(pid, todotxt, attime)
+      end)
+    end
+
+    # send(pid, :dump_state)
+
     state
   end
 
@@ -91,23 +143,27 @@ defmodule TodotxtDeadlineNotify.Worker do
   defp update_mod_time(state) do
     %{todo_file: todo_filepath} = state
 
-    # possibility to crash here, if the file doesnt exist
-    {:ok, stat_info} = File.stat(todo_filepath)
+    case File.stat(todo_filepath) do
+      {:ok, stat_info} ->
+        file_changed =
+          if Map.has_key?(state, :todo_mod_time) do
+            # if the file has changed since we last read it, re-read
+            not (stat_info.mtime == Map.get(state, :todo_mod_time))
+          else
+            # default to true if file hasnt been read, to signify to read the file
+            # if this is being called from init, maintenance fails and the application doesnt start at all.
+            true
+          end
 
-    file_changed =
-      if Map.has_key?(state, :todo_mod_time) do
-        # if the file has changed since we last read it, re-read
-        not (stat_info.mtime == Map.get(state, :todo_mod_time))
-      else
-        # default to true if file hasnt been read, to signify to read the file
-        # if this is being called from init, maintenance fails and the application doesnt start at all.
-        true
-      end
+        {file_changed, Map.put(state, :todo_mod_time, stat_info.mtime)}
 
-    {file_changed, Map.put(state, :todo_mod_time, stat_info.mtime)}
+      {:error, _} ->
+        IO.puts(:stderr, "Error: Could not stat file: #{todo_filepath}")
+        {false, state}
+    end
   end
 
-  # calls :check in 30 seconds
+  # calls :check once a minute
   defp schedule_check() do
     Process.send_after(self(), :check, 5 * 1000)
   end
