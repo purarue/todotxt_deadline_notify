@@ -31,11 +31,11 @@ defmodule TodotxtDeadlineNotify.Worker do
   Main loop, checks if any notifications need to be sent
   """
   def handle_info(:check, state) do
-    # recursive call to check file every 5 minutes
+    # check if the file has been changed
     state = maintenance(state)
     # check if any todos need to be sent
     state = send_notifications(state)
-    # schedule next loop
+    # schedule next :check
     schedule_check()
     {:noreply, state}
   end
