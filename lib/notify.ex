@@ -2,7 +2,7 @@ defmodule TodotxtDeadlineNotify.Notify do
   @doc """
   Send notification to me whenever a deadline is approaching
 
-  Returns :ok if the notification suceeded or :error
+  Returns {:ok, message} if the notification suceeded or {:error, message}
   if the notification failed.
   """
   def notify(message) when is_bitstring(message) do
@@ -28,16 +28,16 @@ defmodule TodotxtDeadlineNotify.Notify do
         cond do
           status_code > 200 and status_code < 400 ->
             IO.puts("Sent reminder to discord: #{message}")
-            :ok
+            {:ok, message}
 
           true ->
             IO.puts(:stderr, "Failed with status #{status_code}: #{body}")
-            :error
+            {:error, message}
         end
 
       {:error, %HTTPoison.Error{reason: reason}} ->
         IO.inspect({:error, reason})
-        :error
+        {:error, message}
     end
   end
 end

@@ -80,6 +80,8 @@ defmodule TodotxtDeadlineNotify.Worker do
         not SentCache.has_been_sent?(pid, todotxt, attime)
       end)
 
+    # IO.inspect(reminders_to_send)
+
     # dont need to send muliple reminders for the same message on one loop
     responses_sent =
       reminders_to_send
@@ -89,17 +91,39 @@ defmodule TodotxtDeadlineNotify.Worker do
       end)
       |> MapSet.new()
       # send notifications
-      |> Enum.map(&Notify.notify(&1))
-
-    # but mark them all as sent if all messages are sent successfully
-    if not Enum.member?(responses_sent, :error) do
-      reminders_to_send
-      |> Enum.map(fn {todotxt, attime} ->
-        SentCache.mark_sent(pid, todotxt, attime)
+      |> Enum.map(fn remind ->
+        :timer.sleep(3000)
+        Notify.notify(remind)
       end)
-    end
 
-    # send(pid, :dump_state)
+    # IO.inspect(responses_sent)
+
+    # filter messages that got sent successfully
+    messages_sent_successfully =
+      responses_sent
+      |> Enum.filter(fn {status, _message} ->
+        status == :ok
+      end)
+      |> Enum.map(fn {_status, message} ->
+        message
+      end)
+      |> MapSet.new()
+
+    # IO.inspect(messages_sent_successfully)
+
+    # mark messages that were sent successfully as sent
+    reminders_to_send
+    |> Enum.filter(fn {todotxt, _at} ->
+      MapSet.member?(messages_sent_successfully, todotxt)
+    end)
+    |> Enum.map(fn {todotxt, attime} ->
+      SentCache.mark_sent(pid, todotxt, attime)
+    end)
+
+    # for debuginning items in cache
+    if length(responses_sent) > 0 do
+      send(pid, :dump_state)
+    end
 
     state
   end
