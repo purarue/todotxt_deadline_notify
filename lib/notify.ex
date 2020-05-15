@@ -8,6 +8,8 @@ defmodule TodotxtDeadlineNotify.Notify do
   def notify(message) when is_bitstring(message) do
     IO.puts("Sending reminder: #{message}")
 
+    :timer.sleep(3000)
+
     # send a message to a discord webhook
     discord_webhook_url = Application.get_env(:todotxt_deadline_notify, :discord_webhook)
     headers = [Accept: "application/json", "Content-Type": "application/json"]

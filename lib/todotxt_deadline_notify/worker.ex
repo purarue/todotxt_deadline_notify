@@ -91,10 +91,7 @@ defmodule TodotxtDeadlineNotify.Worker do
       end)
       |> MapSet.new()
       # send notifications
-      |> Enum.map(fn remind ->
-        :timer.sleep(3000)
-        Notify.notify(remind)
-      end)
+      |> Enum.map(&Notify.notify(&1))
 
     # IO.inspect(responses_sent)
 
@@ -122,6 +119,7 @@ defmodule TodotxtDeadlineNotify.Worker do
 
     # for debuginning items in cache
     if length(responses_sent) > 0 do
+      IO.puts("Current SendCache state:")
       send(pid, :dump_state)
     end
 
