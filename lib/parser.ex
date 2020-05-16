@@ -54,14 +54,18 @@ defmodule TodotxtDeadlineNotify.Parser do
     file_content_str
     |> String.split("\n")
     # remove empty lines
-    |> Enum.reject(fn line -> String.trim(line) == "" end)
-    |> Enum.map(&from_string(&1))
+    |> Stream.reject(fn line -> String.trim(line) == "" end)
+    |> Stream.map(&from_string(&1))
+    |> Enum.to_list()
   end
 end
 
 defmodule TodotxtDeadlineNotify.TodoUtils do
   @doc """
   Shifts naive datetime to the same day, but at 'morning_time'
+  If this is happening in the morning before I should be
+  notified in the morning, dont notify in the morning as well
+  (since that would be past the deadline)
   """
   def in_the_morning(datetime, morning_time) do
     case NaiveDateTime.new(
@@ -72,8 +76,13 @@ defmodule TodotxtDeadlineNotify.TodoUtils do
            morning_time[:minute],
            datetime.second
          ) do
-      {:ok, datetime} ->
-        datetime
+      {:ok, morning_shifted_datetime} ->
+        # if shifted datetime is before morning time
+        if NaiveDateTime.compare(datetime, morning_shifted_datetime) == :gt do
+          morning_shifted_datetime
+        else
+          nil
+        end
 
       _ ->
         nil

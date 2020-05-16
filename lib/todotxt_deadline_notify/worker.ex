@@ -72,13 +72,14 @@ defmodule TodotxtDeadlineNotify.Worker do
       end)
       |> List.flatten()
       # if the reminder send time is in the past
-      |> Enum.filter(fn {_todotxt, attime} ->
+      |> Stream.filter(fn {_todotxt, attime} ->
         NaiveDateTime.compare(attime, current_time) == :lt
       end)
       # if the notification hasnt already been sent
-      |> Enum.filter(fn {todotxt, attime} ->
+      |> Stream.filter(fn {todotxt, attime} ->
         not SentCache.has_been_sent?(pid, todotxt, attime)
       end)
+      |> Enum.to_list()
 
     # IO.inspect(reminders_to_send)
 
@@ -98,10 +99,10 @@ defmodule TodotxtDeadlineNotify.Worker do
     # filter messages that got sent successfully
     messages_sent_successfully =
       responses_sent
-      |> Enum.filter(fn {status, _message} ->
+      |> Stream.filter(fn {status, _message} ->
         status == :ok
       end)
-      |> Enum.map(fn {_status, message} ->
+      |> Stream.map(fn {_status, message} ->
         message
       end)
       |> MapSet.new()
@@ -110,12 +111,13 @@ defmodule TodotxtDeadlineNotify.Worker do
 
     # mark messages that were sent successfully as sent
     reminders_to_send
-    |> Enum.filter(fn {todotxt, _at} ->
+    |> Stream.filter(fn {todotxt, _at} ->
       MapSet.member?(messages_sent_successfully, todotxt)
     end)
-    |> Enum.map(fn {todotxt, attime} ->
+    |> Stream.map(fn {todotxt, attime} ->
       SentCache.mark_sent(pid, todotxt, attime)
     end)
+    |> Enum.to_list()
 
     # for debuginning items in cache
     if length(responses_sent) > 0 do
