@@ -28,7 +28,7 @@ defmodule TodotxtDeadlineNotify.Notify do
     case HTTPoison.post(discord_webhook_url, post_body, headers) do
       {:ok, %HTTPoison.Response{status_code: status_code, body: body}} ->
         cond do
-          status_code > 200 and status_code < 400 ->
+          status_code >= 200 and status_code < 400 ->
             IO.puts("Sent reminder to discord: #{message}")
             {:ok, message}
 
