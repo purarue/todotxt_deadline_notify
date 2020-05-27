@@ -2,6 +2,8 @@
 
 A companion for [full_todotxt](https://github.com/seanbreckenridge/full_todotxt), runs on my server and sends me reminders when `deadlines` for `todos` when they get close. In particular:
 
+<img src="https://raw.githubusercontent.com/seanbreckenridge/todotxt_deadline_notify/master/.github/discord_embed.png" alt="demo gif">
+
 - In the morning: remind me of any todos which have `deadline`s today.
 - In the evening: remind me of any todos (excluding priority `C`) for tomorrow.
 - For each todo, remind me some time before the todos `deadline` If:
