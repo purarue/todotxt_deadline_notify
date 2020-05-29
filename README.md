@@ -1,6 +1,6 @@
 # TodotxtDeadlineNotify
 
-A companion for [full_todotxt](https://github.com/seanbreckenridge/full_todotxt), runs on my server and sends me reminders when `deadlines` for `todos` when they get close. In particular:
+A companion for [full_todotxt](https://gitlab.com/seanbreckenridge/full_todotxt), runs on my server and sends me reminders when `deadlines` for `todos` when they get close. In particular:
 
 <img src="https://raw.githubusercontent.com/seanbreckenridge/todotxt_deadline_notify/master/.github/discord_embed.png" alt="demo gif">
 
