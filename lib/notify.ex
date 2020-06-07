@@ -25,7 +25,7 @@ defmodule TodotxtDeadlineNotify.Notify do
 
     post_body = Poison.encode!(embed_data)
 
-    case HTTPoison.post(discord_webhook_url, post_body, headers) do
+    case HTTPoison.post(discord_webhook_url, post_body, headers, [ssl: [{:versions, [:"tlsv1.2"]}]]) do
       {:ok, %HTTPoison.Response{status_code: status_code, body: body}} ->
         cond do
           status_code >= 200 and status_code < 400 ->
