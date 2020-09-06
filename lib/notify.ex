@@ -2,7 +2,7 @@ defmodule TodotxtDeadlineNotify.Notify do
   @doc """
   Send notification to me whenever a deadline is approaching
 
-  Returns {:ok, message} if the notification suceeded or {:error, message}
+  Returns {:ok, message} if the notification succeeded or {:error, message}
   if the notification failed.
   """
   def notify(message) when is_bitstring(message) do

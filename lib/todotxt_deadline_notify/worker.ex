@@ -54,7 +54,7 @@ defmodule TodotxtDeadlineNotify.Worker do
   # have deadlines in the past will have notifications sent (but not for each time (morning, night), should
   # be filtered down to each type, and then all marked notifications sent
   # (assuming the discord POST succeeded))
-  # the duplicate notifications are managable. If a todo really has a deadline
+  # the duplicate notifications are manageable. If a todo really has a deadline
   # in the past, no need to worry about re-remindig me about it.
   # If I dont want to be, I can always extend the deadline and re-sync the todo.txt file.
   # This keeps my todo.txt file up to date and reminds me to look at my todos
@@ -83,7 +83,7 @@ defmodule TodotxtDeadlineNotify.Worker do
 
     # IO.inspect(reminders_to_send)
 
-    # dont need to send muliple reminders for the same message on one loop
+    # dont need to send multiple reminders for the same message on one loop
     responses_sent =
       reminders_to_send
       # filter to only send unique reminders
