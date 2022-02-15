@@ -9,4 +9,3 @@ SERVER="${TODO_SERVER:-vultr}"
 TODO_FILE="${TODO_DIR}/todo.txt"
 
 find "$TODO_FILE" | entr -n scp "${TODO_FILE}" "${SERVER}:.todo/todo.txt"
-

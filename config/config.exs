@@ -1,15 +1,19 @@
-use Mix.Config
+import Config
 
 home = System.user_home!()
 
 todo_file = Path.join([home], ".todo/todo.txt")
 discord_file = Path.join([home, ".todo/discord.txt"])
 
-discord_webhook = discord_file |> File.read!() |> String.trim()
+discord_webhook =
+  if File.exists?(discord_file) do
+    discord_file |> File.read!() |> String.trim()
+  else
+    ""
+  end
 
 if not File.exists?(todo_file) do
-  IO.puts(:stderr, "'#{todo_file}' doesn't exists, exiting...")
-  System.halt(1)
+  IO.puts(:stderr, "Warning: '#{todo_file}' doesn't exist!")
 end
 
 config :todotxt_deadline_notify,

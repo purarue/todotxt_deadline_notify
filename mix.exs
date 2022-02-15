@@ -25,7 +25,7 @@ defmodule TodotxtDeadlineNotify.MixProject do
     [
       {:timex, "~> 3.5"},
       {:tzdata, "~> 1.0.2"},
-      {:httpoison, "~> 1.6"},
+      {:httpoison, "~> 1.8"},
       {:poison, "~> 3.1"}
     ]
   end
