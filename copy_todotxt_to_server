@@ -1,7 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-TODO_FILE="${HOME}/.config/todo/todo.txt"
-SSH_KEYFILE="${HOME}/.ssh/vultr"
+set -u
+set -e
+set -o pipefail
 
-find "$TODO_FILE" | entr scp -v -o IPQoS=0 -o ConnectTimeout=60 -i "$SSH_KEYFILE" "$TODO_FILE" "$USER"@140.82.50.43:.todo/todo.txt
+declare TODO_FILE SERVER
+SERVER="${TODO_SERVER:-vultr}"
+TODO_FILE="${TODO_DIR}/todo.txt"
+
+find "$TODO_FILE" | entr scp "${TODO_FILE}" "${SERVER}:.todo/todo.txt"
 
