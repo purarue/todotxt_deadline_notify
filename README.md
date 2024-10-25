@@ -1,8 +1,8 @@
 # TodotxtDeadlineNotify
 
-A companion for [full_todotxt](https://github.com/seanbreckenridge/full_todotxt), runs on my server and sends me reminders when `deadlines` for `todos` when they get close. In particular:
+A companion for [full_todotxt](https://github.com/purarue/full_todotxt), runs on my server and sends me reminders when `deadlines` for `todos` when they get close. In particular:
 
-<img src="https://raw.githubusercontent.com/seanbreckenridge/todotxt_deadline_notify/master/.github/discord_embed.png" alt="demo gif">
+<img src="https://raw.githubusercontent.com/purarue/todotxt_deadline_notify/master/.github/discord_embed.png" alt="demo gif">
 
 - In the morning: remind me of any todos which have `deadline`s today.
 - In the evening: remind me of any todos (excluding priority `C`) for tomorrow.
@@ -21,4 +21,4 @@ The discord web hook and location of todo.txt on the server are hard coded in `c
 
 This could be extended pretty easily, by modifying the `notify` function [here](./lib/notify.ex) to send the message to somewhere other than discord.
 
-Uses an in-memory cache to keep track of which reminders have already been sent, implementation details [here](https://github.com/seanbreckenridge/todotxt_deadline_notify/blob/c0791e6ab876552223af39bafe3285ab6f892969/lib/todotxt_deadline_notify/worker.ex#L49-L60).
+Uses an in-memory cache to keep track of which reminders have already been sent, implementation details [here](https://github.com/purarue/todotxt_deadline_notify/blob/c0791e6ab876552223af39bafe3285ab6f892969/lib/todotxt_deadline_notify/worker.ex#L49-L60).
